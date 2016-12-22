@@ -21,7 +21,7 @@ import java.util.List;
      * This method return path to file
      * @return filePath
      */
-    public String getfilePath() {
+    public String getFilePath() {
         return filePath;
     }
 
@@ -41,10 +41,8 @@ import java.util.List;
             while (file.ready()) {
                 entries.add(file.readLine());
             }
-        } catch (FileNotFoundException e) {
-            System.out.println("Oops...This file not found");
         } catch (IOException e) {
-            System.out.println("Oops...Reading error!");
+            e.printStackTrace();
         }
     }
 }

@@ -3,8 +3,9 @@ package csv;
 import java.util.ArrayList;
 import java.util.List;
 
-/** @author Basova Ekaterina - ekateryna.basova@gmail.com
+/**
  * This class is responsible for keeping the list of users
+ * @author Basova Ekaterina - ekateryna.basova@gmail.com
  */
 public class UserStorage {
     private List<User> users;

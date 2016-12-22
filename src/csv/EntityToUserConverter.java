@@ -1,16 +1,19 @@
 package csv;
 
-/** @author Dmitry Kalinenko
+import main.Constants;
+
+/**
  * Entity to user converter
+ * @author Dmitry Kalinenko
  */
 public class EntityToUserConverter {
     /**
      * Split a string and returns a new user
-     * @param entity the essence
+     * @param entity to entity
      * @return user
      */
     public static User getUser(String entity) {
-        String[] fields = entity.split(",");
+        String[] fields = entity.split(Constants.SEPARATOR);
         User user = null;
         try {
             String firstName = fields[0];

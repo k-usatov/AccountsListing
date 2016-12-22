@@ -2,46 +2,76 @@ package html;
 
 import csv.User;
 import csv.UserStorage;
+import main.Constants;
+import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+
+import java.io.*;
+import java.util.HashMap;
+import java.util.Map;
+
 /**This class generates the html template created accounts
  * @author Usatov Kostiantyn - usatov.k.s@gmail.com
  */
 public class HtmlBuilder {
-    private final static String HTML_FILE_NAME = "index.html";
     private String htmlPath;
-    private Document document;
+    private HashMap<User, Document> map;
     private UserStorage userStorage;
 
 
     public HtmlBuilder(UserStorage userStorage) {
         this.userStorage = userStorage;
-        this.htmlPath = getFileFolder(userStorage.getCsvReader().getfilePath()) + HTML_FILE_NAME;
-        this.document = Document.createShell("");
+        this.htmlPath = getFileFolder(userStorage.getCsvReader().getFilePath());
+        this.map = new HashMap<>();
+        try {
+            for (User u : userStorage.getUsers()) {
+                Document d = Jsoup.parse(getClass().getResourceAsStream("pattern.html"), "UTF-8", "");
+                map.put(u, d); //добавляем нового пользователя и шаблон
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         generateHtmlCode();
     }
 
-    /**It generates code for a table in html page
+    /**
+     *Replace template all users
      */
     private void generateHtmlCode() {
-        Element table = document.body().appendElement("table");
-        document.head().appendElement("link").attr("rel", "stylesheet")
-                .attr("type", "text/css").attr("href", "style.css");
-        for (User u : userStorage.getUsers()) {
-            Element row = table.appendElement("tr");
-            row.appendElement("td").text(u.getFirstName());
-            row.appendElement("td").text(u.getLastName());
-            row.appendElement("td").text(u.getEmail());
-            row.appendElement("td").text(u.getPassword());
-            row.appendElement("td").text(u.getSecondaryEmail());
-            row.appendElement("td").text(u.getMobilePhone());
-            row.appendElement("td").text(u.getDepartment());
+        for (Map.Entry<User, Document> entry : map.entrySet()) {
+            generateHtmlCodeForUser(entry.getKey());
         }
     }
+
+    /**
+     * Replace template for a specific user
+     * @param user users
+     */
+    private void generateHtmlCodeForUser(User user) {
+        replace(user, "firstName", user.getFirstName());
+        replace(user, "lastName", user.getLastName());
+        replace(user, "email", user.getEmail());
+        replace(user, "password", user.getPassword());
+        replace(user, "secondaryEmail", user.getSecondaryEmail());
+        replace(user, "mobilePhone", user.getMobilePhone());
+        replace(user, "department", user.getDepartment());
+    }
+
+    /**
+     * Seeking peremennіe and replaces user
+     * @param user users
+     * @param tag var from template
+     * @param replacement so what should be changed
+     */
+    private void replace(User user, String tag, String replacement) {
+        String selector = "p:contains(\\{" + tag + "\\})";
+        String r = "\\{" + tag + "\\}";
+        for (Element e : map.get(user).select(selector)) { //map.get(user) take document
+            e.text(e.text().replaceAll(r, replacement));
+        }
+    }
+
     /**Get the path to the folder in which the file is transferred
      * @param filePath absolute path to file
      * @return absolute path to folder
@@ -53,25 +83,30 @@ public class HtmlBuilder {
     /**This method generates a html and css files
      */
     public void generate() {
-        generateHtmlFile();
-        generateCssFile();
-    }
-    /**This method generates a html file
-     */
-    private void generateHtmlFile() {
-        try {
-            File file = new File(htmlPath);
-            file.createNewFile();
-            BufferedWriter writer = new BufferedWriter(new FileWriter(file));
-            writer.write(document.outerHtml());
-            writer.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+        for (User u : userStorage.getUsers()) {
+            generateCssFile();
+            generateHtmlFileForUser(u);
         }
     }
+
+    /**
+     * This method generates a html file for user
+     * @param u users
+     */
+    private void generateHtmlFileForUser(User u) {
+            try {
+                File file = new File(htmlPath + u.getFirstName() + u.getLastName() + Constants.HTML_FILE_EXTENSION);
+                file.createNewFile();
+                BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+                writer.write(map.get(u).outerHtml());
+                writer.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+    }
+
     /**This method generates a css file
      */
-
     private void generateCssFile() {
         String to = getFileFolder(htmlPath);
         CssCopier cssCopier = new CssCopier();
